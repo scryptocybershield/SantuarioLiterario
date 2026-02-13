@@ -1,22 +1,29 @@
 import { useEffect, useState } from "react";
 import useShowToast from "./useShowToast";
 import { doc, getDoc } from "firebase/firestore";
-import { firestore } from "../firebase/firebase";
+import { db } from "../firebase/firebase";
+import useUserProfileStore from "../store/userProfileStore";
 
-const useGetUserProfileById = (userId) => {
+const useGetUserProfileById = (uid) => {
 	const [isLoading, setIsLoading] = useState(true);
-	const [userProfile, setUserProfile] = useState(null);
-
 	const showToast = useShowToast();
+	const { userProfile, setUserProfile } = useUserProfileStore();
 
 	useEffect(() => {
 		const getUserProfile = async () => {
+			if (!uid || uid === "undefined") {
+				setIsLoading(false);
+				return;
+			}
 			setIsLoading(true);
-			setUserProfile(null);
 			try {
-				const userRef = await getDoc(doc(firestore, "users", userId));
-				if (userRef.exists()) {
-					setUserProfile(userRef.data());
+				const userRef = doc(db, "users", uid);
+				const userSnap = await getDoc(userRef);
+
+				if (userSnap.exists()) {
+					setUserProfile(userSnap.data());
+				} else {
+					setUserProfile(null);
 				}
 			} catch (error) {
 				showToast("Error", error.message, "error");
@@ -24,10 +31,11 @@ const useGetUserProfileById = (userId) => {
 				setIsLoading(false);
 			}
 		};
-		getUserProfile();
-	}, [showToast, setUserProfile, userId]);
 
-	return { isLoading, userProfile, setUserProfile };
+		getUserProfile();
+	}, [setUserProfile, uid, showToast]);
+
+	return { isLoading, userProfile };
 };
 
 export default useGetUserProfileById;

@@ -17,11 +17,28 @@ const useSignUpWithEmailAndPassword = () => {
 
 		const usersRef = collection(firestore, "users");
 
-		const q = query(usersRef, where("username", "==", inputs.username));
-		const querySnapshot = await getDocs(q);
+		try {
+			const q = query(usersRef, where("username", "==", inputs.username));
+			const querySnapshot = await getDocs(q);
 
-		if (!querySnapshot.empty) {
-			showToast("Error", "Username already exists", "error");
+			if (!querySnapshot.empty) {
+				showToast("Error", "Username already exists", "error");
+				return;
+			}
+		} catch (firestoreError) {
+			console.error("Firestore query error:", firestoreError);
+			console.error("Error code:", firestoreError.code);
+			console.error("Error message:", firestoreError.message);
+
+			if (firestoreError.code && firestoreError.code.includes('permission-denied') || firestoreError.message.includes('Missing or insufficient permissions')) {
+				showToast(
+					"Permisos de Firestore",
+					"Configura las reglas de seguridad en Firebase Console > Firestore > Rules. Regla temporal: allow read, write: if true;",
+					"error"
+				);
+			} else {
+				showToast("Error de Firestore", firestoreError.message, "error");
+			}
 			return;
 		}
 
@@ -49,7 +66,29 @@ const useSignUpWithEmailAndPassword = () => {
 				loginUser(userDoc);
 			}
 		} catch (error) {
-			showToast("Error", error.message, "error");
+			console.error("Firebase signup error:", error);
+			console.error("Error code:", error.code);
+			console.error("Error message:", error.message);
+
+			let message = error.message || "Error de Registro: No se pudo crear la cuenta.";
+			if (error.code === 'auth/network-request-failed' || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+				message = "Error de conexión: No se pudo conectar con el servidor de autenticación.";
+			} else if (error.code === 'auth/email-already-in-use') {
+				message = "Email ya registrado: Este correo electrónico ya está en uso.";
+			} else if (error.code === 'auth/invalid-email') {
+				message = "Email inválido: Por favor ingresa un email válido.";
+			} else if (error.code === 'auth/weak-password') {
+				message = "Contraseña débil: La contraseña debe tener al menos 6 caracteres.";
+			} else if (error.code === 'auth/operation-not-allowed') {
+				message = "Operación no permitida: El registro con email/contraseña no está habilitado. Verifica en Firebase Console que esté habilitado.";
+			} else if (error.code === 'auth/too-many-requests') {
+				message = "Demasiados intentos: Por favor espera unos minutos antes de intentar nuevamente.";
+			} else if (error.code === 'auth/unauthorized-domain') {
+				message = "Dominio no autorizado: Agrega este dominio a la lista de dominios autorizados en Firebase Console > Authentication > Settings > Authorized domains.";
+			} else if (error.code && error.code.includes('permission-denied') || error.message.includes('Missing or insufficient permissions')) {
+				message = "Permisos de Firestore denegados: Configura las reglas de seguridad en Firebase Console > Firestore > Rules. Usa temporalmente: allow read, write: if true;";
+			}
+			showToast("Error de registro", message, "error");
 		}
 	};
 

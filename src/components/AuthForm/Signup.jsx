@@ -1,5 +1,5 @@
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
-import { Alert, AlertIcon, Button, Input, InputGroup, InputRightElement } from "@chakra-ui/react";
+import { Alert, AlertIcon, Button, Input, InputGroup, InputRightElement, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import useSignUpWithEmailAndPassword from "../../hooks/useSignUpWithEmailAndPassword";
 
@@ -14,49 +14,69 @@ const Signup = () => {
 	const { loading, error, signup } = useSignUpWithEmailAndPassword();
 
 	return (
-		<>
+		<VStack spacing={4} w="full">
 			<Input
-				placeholder='Email'
+				placeholder='Correo electrónico'
 				fontSize={14}
 				type='email'
-				size={"sm"}
+				size={"md"}
 				value={inputs.email}
 				onChange={(e) => setInputs({ ...inputs, email: e.target.value })}
+				borderColor="santuario.border"
+				_focus={{ borderColor: "santuario.accent", boxShadow: "none" }}
+				bg="white"
 			/>
 			<Input
-				placeholder='Username'
+				placeholder='Nombre de usuario'
 				fontSize={14}
 				type='text'
-				size={"sm"}
+				size={"md"}
 				value={inputs.username}
 				onChange={(e) => setInputs({ ...inputs, username: e.target.value })}
+				borderColor="santuario.border"
+				_focus={{ borderColor: "santuario.accent", boxShadow: "none" }}
+				bg="white"
 			/>
 			<Input
-				placeholder='Full Name'
+				placeholder='Nombre completo'
 				fontSize={14}
 				type='text'
-				size={"sm"}
+				size={"md"}
 				value={inputs.fullName}
 				onChange={(e) => setInputs({ ...inputs, fullName: e.target.value })}
+				borderColor="santuario.border"
+				_focus={{ borderColor: "santuario.accent", boxShadow: "none" }}
+				bg="white"
 			/>
 			<InputGroup>
 				<Input
-					placeholder='Password'
+					placeholder='Contraseña'
 					fontSize={14}
 					type={showPassword ? "text" : "password"}
 					value={inputs.password}
-					size={"sm"}
+					size={"md"}
 					onChange={(e) => setInputs({ ...inputs, password: e.target.value })}
+					borderColor="santuario.border"
+					_focus={{ borderColor: "santuario.accent", boxShadow: "none" }}
+					bg="white"
+					pr="3.5rem"
 				/>
-				<InputRightElement h='full'>
-					<Button variant={"ghost"} size={"sm"} onClick={() => setShowPassword(!showPassword)}>
+				<InputRightElement h='full' mr={1}>
+					<Button
+						variant={"ghost"}
+						size={"sm"}
+						onClick={() => setShowPassword(!showPassword)}
+						color="santuario.charcoal"
+						opacity={0.7}
+						_hover={{ bg: "transparent", color: "santuario.accent" }}
+					>
 						{showPassword ? <ViewIcon /> : <ViewOffIcon />}
 					</Button>
 				</InputRightElement>
 			</InputGroup>
 
 			{error && (
-				<Alert status='error' fontSize={13} p={2} borderRadius={4}>
+				<Alert status='error' fontSize={13} p={3} borderRadius="md">
 					<AlertIcon fontSize={12} />
 					{error.message}
 				</Alert>
@@ -64,15 +84,20 @@ const Signup = () => {
 
 			<Button
 				w={"full"}
-				colorScheme='blue'
-				size={"sm"}
+				bg='santuario.accent'
+				color='white'
+				size={"md"}
 				fontSize={14}
 				isLoading={loading}
 				onClick={() => signup(inputs)}
+				mt={2}
+				fontWeight="600"
+				_hover={{ bg: 'santuario.charcoal' }}
+				_active={{ bg: 'santuario.charcoal' }}
 			>
-				Sign Up
+				Registrarse
 			</Button>
-		</>
+		</VStack>
 	);
 };
 

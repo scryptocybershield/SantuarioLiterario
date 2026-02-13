@@ -11,9 +11,12 @@ const GoogleAuth = ({ prefix }) => {
 	const loginUser = useAuthStore((state) => state.login);
 
 	const handleGoogleAuth = async () => {
+		console.log("Starting Google authentication...");
 		try {
 			const newUser = await signInWithGoogle();
+			console.log("Google auth result:", newUser);
 			if (!newUser && error) {
+				console.error("Google auth hook error:", error);
 				showToast("Error", error.message, "error");
 				return;
 			}
@@ -44,15 +47,44 @@ const GoogleAuth = ({ prefix }) => {
 				loginUser(userDoc);
 			}
 		} catch (error) {
-			showToast("Error", error.message, "error");
+			console.error("Google authentication error:", error);
+			console.error("Error code:", error.code);
+			console.error("Error message:", error.message);
+
+			let message = error.message;
+			if (error.code === 'auth/unauthorized-domain') {
+				message = "Dominio no autorizado. Agrega este dominio a Firebase Console > Authentication > Settings > Authorized domains. Actualmente estás en: " + window.location.hostname;
+			} else if (error.code === 'auth/popup-blocked') {
+				message = "El popup de autenticación fue bloqueado. Permite popups para este sitio.";
+			} else if (error.code === 'auth/popup-closed-by-user') {
+				message = "Cerraste la ventana de autenticación. Intenta nuevamente.";
+			} else if (error.code === 'auth/network-request-failed') {
+				message = "Error de conexión. Verifica tu conexión a internet.";
+			} else if (error.code === 'auth/operation-not-allowed') {
+				message = "Autenticación con Google no habilitada. Actívala en Firebase Console > Authentication > Sign-in method.";
+			}
+
+			showToast("Error de Google Auth", message, "error");
 		}
 	};
 
 	return (
-		<Flex alignItems={"center"} justifyContent={"center"} cursor={"pointer"} onClick={handleGoogleAuth}>
+		<Flex
+			alignItems={"center"}
+			justifyContent={"center"}
+			cursor={"pointer"}
+			onClick={handleGoogleAuth}
+			border="1px solid"
+			borderColor="santuario.border"
+			borderRadius="md"
+			p={3}
+			w="full"
+			_hover={{ bg: "santuario.paper", borderColor: "santuario.accent" }}
+			transition="all 0.2s"
+		>
 			<Image src='/google.png' w={5} alt='Google logo' />
-			<Text mx='2' color={"blue.500"}>
-				{prefix} with Google
+			<Text mx='2' color={"santuario.charcoal"} fontWeight="500">
+				{prefix} con Google
 			</Text>
 		</Flex>
 	);

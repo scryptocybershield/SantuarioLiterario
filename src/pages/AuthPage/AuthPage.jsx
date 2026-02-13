@@ -1,26 +1,48 @@
-import { Container, Flex, VStack, Box, Image } from "@chakra-ui/react";
+import { Container, Flex, VStack, Box, Text, Heading } from "@chakra-ui/react";
 import AuthForm from "../../components/AuthForm/AuthForm";
 
 const AuthPage = () => {
 	return (
-		<Flex minH={"100vh"} justifyContent={"center"} alignItems={"center"} px={4}>
-			<Container maxW={"container.md"} padding={0}>
-				<Flex justifyContent={"center"} alignItems={"center"} gap={10}>
-					{/* Left hand-side */}
-					<Box display={{ base: "none", md: "block" }}>
-						<Image src='/auth.png' h={650} alt='Phone img' />
+		<Flex
+			minH={"100vh"}
+			justifyContent={"center"}
+			alignItems={"center"}
+			bg="santuario.paper"
+			px={4}
+			fontFamily="body"
+		>
+			<Container maxW={"container.sm"} padding={0}>
+				<VStack spacing={8} align={"stretch"}>
+					{/* Encabezado */}
+					<Box textAlign="center" mb={4}>
+						<Heading
+							as="h1"
+							fontSize="4xl"
+							fontWeight="700"
+							fontFamily="heading"
+							color="santuario.charcoal"
+							mb={2}
+						>
+							Santuario Literario
+						</Heading>
+						<Text fontSize="lg" color="santuario.charcoal" opacity={0.7}>
+							Tu espacio de introspección y lectura profunda
+						</Text>
 					</Box>
 
-					{/* Right hand-side */}
-					<VStack spacing={4} align={"stretch"}>
-						<AuthForm />
-						<Box textAlign={"center"}>Get the app.</Box>
-						<Flex gap={5} justifyContent={"center"}>
-							<Image src='/playstore.png' h={"10"} alt='Playstore logo' />
-							<Image src='/microsoft.png' h={"10"} alt='Microsoft logo' />
-						</Flex>
-					</VStack>
-				</Flex>
+					{/* Formulario de autenticación */}
+					<AuthForm />
+
+					{/* Mensaje inspirador */}
+					<Box textAlign="center" pt={4}>
+						<Text fontSize="sm" color="santuario.charcoal" opacity={0.6} fontStyle="italic">
+							"Un libro abierto es un cerebro que habla; cerrado, un amigo que espera; olvidado, un alma que perdona; destruido, un corazón que llora."
+						</Text>
+						<Text fontSize="xs" color="santuario.charcoal" opacity={0.5} mt={2}>
+							Proverbio hindú
+						</Text>
+					</Box>
+				</VStack>
 			</Container>
 		</Flex>
 	);

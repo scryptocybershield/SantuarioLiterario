@@ -30,19 +30,19 @@ const useFollowUser = (userId) => {
 				// unfollow
 				setAuthUser({
 					...authUser,
-					following: authUser.following.filter((uid) => uid !== userId),
+					following: authUser.following?.filter((uid) => uid !== userId) || [],
 				});
 				if (userProfile)
 					setUserProfile({
 						...userProfile,
-						followers: userProfile.followers.filter((uid) => uid !== authUser.uid),
+						followers: userProfile.followers?.filter((uid) => uid !== authUser.uid) || [],
 					});
 
 				localStorage.setItem(
 					"user-info",
 					JSON.stringify({
 						...authUser,
-						following: authUser.following.filter((uid) => uid !== userId),
+						following: authUser.following?.filter((uid) => uid !== userId) || [],
 					})
 				);
 				setIsFollowing(false);
@@ -50,20 +50,20 @@ const useFollowUser = (userId) => {
 				// follow
 				setAuthUser({
 					...authUser,
-					following: [...authUser.following, userId],
+					following: [...(authUser.following || []), userId],
 				});
 
 				if (userProfile)
 					setUserProfile({
 						...userProfile,
-						followers: [...userProfile.followers, authUser.uid],
+						followers: [...(userProfile.followers || []), authUser.uid],
 					});
 
 				localStorage.setItem(
 					"user-info",
 					JSON.stringify({
 						...authUser,
-						following: [...authUser.following, userId],
+						following: [...(authUser.following || []), userId],
 					})
 				);
 				setIsFollowing(true);
@@ -77,7 +77,7 @@ const useFollowUser = (userId) => {
 
 	useEffect(() => {
 		if (authUser) {
-			const isFollowing = authUser.following.includes(userId);
+			const isFollowing = authUser.following?.includes(userId) || false;
 			setIsFollowing(isFollowing);
 		}
 	}, [authUser, userId]);

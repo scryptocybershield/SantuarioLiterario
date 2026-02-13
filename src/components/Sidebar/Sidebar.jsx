@@ -1,6 +1,5 @@
-import { Box, Button, Flex, Link, Tooltip } from "@chakra-ui/react";
+import { Box, Button, Flex, Link, Tooltip, Heading } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
-import { InstagramLogo, InstagramMobileLogo } from "../../assets/constants";
 
 import { BiLogOut } from "react-icons/bi";
 import useLogout from "../../hooks/useLogout";
@@ -12,7 +11,8 @@ const Sidebar = () => {
 		<Box
 			height={"100vh"}
 			borderRight={"1px solid"}
-			borderColor={"whiteAlpha.300"}
+			borderColor={"santuario.border"}
+			bg="white"
 			py={8}
 			position={"sticky"}
 			top={0}
@@ -20,8 +20,10 @@ const Sidebar = () => {
 			px={{ base: 2, md: 4 }}
 		>
 			<Flex direction={"column"} gap={10} w='full' height={"full"}>
-				<Link to={"/"} as={RouterLink} pl={2} display={{ base: "none", md: "block" }} cursor='pointer'>
-					<InstagramLogo />
+				<Link to={"/"} as={RouterLink} pl={2} display={{ base: "none", md: "block" }} cursor='pointer' textDecoration="none">
+					<Heading as="h1" fontSize="xl" fontWeight="700" fontFamily="heading" color="santuario.charcoal">
+						Santuario
+					</Heading>
 				</Link>
 				<Link
 					to={"/"}
@@ -34,8 +36,11 @@ const Sidebar = () => {
 					}}
 					w={10}
 					cursor='pointer'
+					textDecoration="none"
 				>
-					<InstagramMobileLogo />
+					<Heading as="h1" fontSize="lg" fontWeight="700" fontFamily="heading" color="santuario.charcoal">
+						S
+					</Heading>
 				</Link>
 				<Flex direction={"column"} gap={5} cursor={"pointer"}>
 					<SidebarItems />
@@ -44,7 +49,7 @@ const Sidebar = () => {
 				{/* LOGOUT */}
 				<Tooltip
 					hasArrow
-					label={"Logout"}
+					label={"Cerrar sesión"}
 					placement='right'
 					ml={1}
 					openDelay={500}
@@ -54,12 +59,13 @@ const Sidebar = () => {
 						onClick={handleLogout}
 						alignItems={"center"}
 						gap={4}
-						_hover={{ bg: "whiteAlpha.400" }}
+						_hover={{ bg: "santuario.border", color: "santuario.accent" }}
 						borderRadius={6}
 						p={2}
 						w={{ base: 10, md: "full" }}
 						mt={"auto"}
 						justifyContent={{ base: "center", md: "flex-start" }}
+						color="santuario.charcoal"
 					>
 						<BiLogOut size={25} />
 						<Button
@@ -68,7 +74,7 @@ const Sidebar = () => {
 							_hover={{ bg: "transparent" }}
 							isLoading={isLoggingOut}
 						>
-							Logout
+							Cerrar sesión
 						</Button>
 					</Flex>
 				</Tooltip>

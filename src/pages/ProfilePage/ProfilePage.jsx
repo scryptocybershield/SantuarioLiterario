@@ -2,15 +2,38 @@ import { Container, Flex, Link, Skeleton, SkeletonCircle, Text, VStack } from "@
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import ProfileTabs from "../../components/Profile/ProfileTabs";
 import ProfilePosts from "../../components/Profile/ProfilePosts";
-import useGetUserProfileByUsername from "../../hooks/useGetUserProfileByUsername";
-import { useParams } from "react-router-dom";
+import useGetUserProfileById from "../../hooks/useGetUserProfileById";
+import { useParams, Navigate } from "react-router-dom";
 import { Link as RouterLink } from "react-router-dom";
+import useAuthStore from "../../store/authStore";
+import { useEffect } from "react";
+import useUserProfileStore from "../../store/userProfileStore";
 
 const ProfilePage = () => {
-	const { username } = useParams();
-	const { isLoading, userProfile } = useGetUserProfileByUsername(username);
+	const { uid } = useParams();
+	const { isLoading, userProfile } = useGetUserProfileById(uid);
+	const authUser = useAuthStore((state) => state.user);
+	const { setUserProfile } = useUserProfileStore();
 
-	const userNotFound = !isLoading && !userProfile;
+	useEffect(() => {
+		if (!isLoading && !userProfile && authUser && authUser.uid === uid) {
+			// Fallback: If no Firestore profile but it's the current user, use Auth data
+			setUserProfile({
+				uid: authUser.uid,
+				username: authUser.username || authUser.displayName || "usuario",
+				fullName: authUser.fullName || authUser.displayName || "",
+				bio: authUser.bio || "",
+				profilePicURL: authUser.profilePicURL || authUser.photoURL || "",
+				posts: [],
+				followers: [],
+				following: [],
+			});
+		}
+	}, [isLoading, userProfile, authUser, uid, setUserProfile]);
+
+	if (uid === "undefined") return <Navigate to='/' />;
+
+	const userNotFound = !isLoading && !userProfile && (!authUser || authUser.uid !== uid);
 	if (userNotFound) return <UserNotFound />;
 
 	return (
