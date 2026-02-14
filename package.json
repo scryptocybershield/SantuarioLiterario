@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Red social minimalista para lectores - Transformación de Instagram Clone en santuario literario",
+  "description": "Santuario Literario - Red social minimalista para lectores",
   "author": "scryptocybershield",
   "license": "MIT",
   "repository": {
@@ -23,7 +23,20 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "format": "prettier --write \"src/**/*.{js,jsx}\""
+    "format": "prettier --write \"src/**/*.{js,jsx}\"",
+    "firebase:login": "firebase login",
+    "firebase:init": "firebase init",
+    "firebase:deploy": "npm run build && firebase deploy",
+    "firebase:deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "firebase:deploy:firestore": "firebase deploy --only firestore",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules",
+    "firebase:deploy:indexes": "firebase deploy --only firestore:indexes",
+    "firebase:deploy:storage": "firebase deploy --only storage",
+    "firebase:deploy:functions": "firebase deploy --only functions",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:serve": "npm run build && firebase serve",
+    "firebase:status": "firebase projects:list",
+    "firebase:open": "firebase open hosting"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
@@ -31,6 +44,8 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "axios": "^1.13.5",
+    "date-fns": "^4.1.0",
+    "epubjs": "^0.3.93",
     "firebase": "^10.5.2",
     "framer-motion": "^10.16.4",
     "lodash": "^4.17.23",
@@ -38,7 +53,9 @@
     "react-dom": "^18.2.0",
     "react-firebase-hooks": "^5.1.1",
     "react-icons": "^4.11.0",
+    "react-reader": "^2.0.15",
     "react-router-dom": "^6.17.0",
+    "tesseract.js": "^7.0.0",
     "zustand": "^4.4.5"
   },
   "devDependencies": {
@@ -49,6 +66,7 @@
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "firebase-tools": "^12.0.0",
     "prettier": "^3.0.3",
     "vite": "^4.4.5"
   }

@@ -18,7 +18,11 @@ const useGetUserPosts = () => {
 			setPosts([]);
 
 			try {
-				const q = query(collection(firestore, "posts"), where("createdBy", "==", userProfile.uid));
+				// Buscar posts por createdBy (para posts antiguos) O por userId (para citas nuevas)
+				const q = query(
+					collection(firestore, "posts"),
+					where("createdBy", "==", userProfile.uid)
+				);
 				const querySnapshot = await getDocs(q);
 
 				const posts = [];
@@ -26,7 +30,27 @@ const useGetUserPosts = () => {
 					posts.push({ ...doc.data(), id: doc.id });
 				});
 
-				posts.sort((a, b) => b.createdAt - a.createdAt);
+				// También buscar posts por userId (para citas compartidas)
+				const q2 = query(
+					collection(firestore, "posts"),
+					where("userId", "==", userProfile.uid)
+				);
+				const querySnapshot2 = await getDocs(q2);
+
+				querySnapshot2.forEach((doc) => {
+					// Evitar duplicados si un post tiene ambos campos
+					if (!posts.some(p => p.id === doc.id)) {
+						posts.push({ ...doc.data(), id: doc.id });
+					}
+				});
+
+				// Ordenar por fecha de creación (más reciente primero)
+				posts.sort((a, b) => {
+					const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+					const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+					return dateB - dateA;
+				});
+
 				setPosts(posts);
 			} catch (error) {
 				showToast("Error", error.message, "error");

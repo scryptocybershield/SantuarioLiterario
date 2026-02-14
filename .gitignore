@@ -7,9 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+dist/
+dist-ssr/
 *.local
 
 # Editor directories and files
@@ -23,4 +24,109 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment variables and secrets (CRÍTICO PARA SEGURIDAD)
 .env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+.env.*
+!.env.example
+
+# Firebase configuration (CRÍTICO PARA SEGURIDAD)
+.firebaserc
+firebase.json
+firestore.indexes.json
+firestore.rules
+storage.rules
+
+# API keys and service account files (CRÍTICO PARA SEGURIDAD)
+*.key
+*.pem
+*.p12
+*.crt
+*.cer
+service-account*.json
+google-services.json
+GoogleService-Info.plist
+
+# Credentials and sensitive data
+credentials.json
+secrets.json
+config.json
+*.secret
+*.token
+*.password
+*.credential
+
+# Build outputs and cache
+.cache/
+build/
+out/
+.next/
+.nuxt/
+.gatsby/
+.history/
+.coverage/
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Package manager specific
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Testing
+coverage/
+.nyc_output/
+
+# Debug
+debug/
+*.debug
+
+# Local development
+.local-*
+.devcontainer/
+
+# Cloud functions and serverless (pueden contener credenciales)
+cloud-functions/
+functions/
+
+# Database files (pueden contener datos sensibles)
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+tmp/
+temp/
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Application specific (añadir según necesidades)
+# /public/logo.png  # Mantener en git si es parte del diseño
+# /src/firebase/firebase.js  # Mantener pero sin credenciales hardcodeadas

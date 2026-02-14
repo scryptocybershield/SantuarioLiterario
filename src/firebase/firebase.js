@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 // Validar variables de entorno críticas
 const requiredEnvVars = [
@@ -33,6 +34,7 @@ let app;
 let auth;
 let db;
 let storage;
+let functions;
 
 try {
 	console.log("Initializing Firebase with config:", { ...firebaseConfig, apiKey: '***' });
@@ -40,6 +42,7 @@ try {
 	auth = getAuth(app);
 	db = getFirestore(app);
 	storage = getStorage(app);
+	functions = getFunctions(app);
 	console.log("Firebase initialized successfully");
 } catch (error) {
 	console.error("CRITICAL: Firebase Initialization Failure", error);
@@ -50,4 +53,4 @@ try {
 	}
 }
 
-export { app, auth, db, db as firestore, storage };
+export { app, auth, db, db as firestore, storage, functions, httpsCallable };

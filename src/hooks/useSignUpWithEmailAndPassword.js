@@ -1,6 +1,7 @@
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { auth, firestore } from "../firebase/firebase";
-import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { doc, writeBatch } from "firebase/firestore";
+import { sendEmailVerification } from "firebase/auth";
 import useShowToast from "./useShowToast";
 import useAuthStore from "../store/authStore";
 
@@ -15,32 +16,6 @@ const useSignUpWithEmailAndPassword = () => {
 			return;
 		}
 
-		const usersRef = collection(firestore, "users");
-
-		try {
-			const q = query(usersRef, where("username", "==", inputs.username));
-			const querySnapshot = await getDocs(q);
-
-			if (!querySnapshot.empty) {
-				showToast("Error", "Username already exists", "error");
-				return;
-			}
-		} catch (firestoreError) {
-			console.error("Firestore query error:", firestoreError);
-			console.error("Error code:", firestoreError.code);
-			console.error("Error message:", firestoreError.message);
-
-			if (firestoreError.code && firestoreError.code.includes('permission-denied') || firestoreError.message.includes('Missing or insufficient permissions')) {
-				showToast(
-					"Permisos de Firestore",
-					"Configura las reglas de seguridad en Firebase Console > Firestore > Rules. Regla temporal: allow read, write: if true;",
-					"error"
-				);
-			} else {
-				showToast("Error de Firestore", firestoreError.message, "error");
-			}
-			return;
-		}
 
 		try {
 			const newUser = await createUserWithEmailAndPassword(inputs.email, inputs.password);
@@ -49,6 +24,23 @@ const useSignUpWithEmailAndPassword = () => {
 				return;
 			}
 			if (newUser) {
+				// 📧 Enviar verificación de correo electrónico inmediatamente después del registro
+				try {
+					await sendEmailVerification(newUser.user);
+					showToast(
+						"¡Verificación enviada!",
+						"Hemos enviado un correo de verificación a " + inputs.email + ". Por favor, revisa tu bandeja de entrada.",
+						"success"
+					);
+				} catch (emailError) {
+					console.error("Error enviando correo de verificación:", emailError);
+					showToast(
+						"Advertencia",
+						"Cuenta creada pero no pudimos enviar el correo de verificación. Puedes solicitarlo más tarde desde la configuración de tu cuenta.",
+						"warning"
+					);
+				}
+
 				const userDoc = {
 					uid: newUser.user.uid,
 					email: inputs.email,
@@ -60,8 +52,14 @@ const useSignUpWithEmailAndPassword = () => {
 					following: [],
 					posts: [],
 					createdAt: Date.now(),
+					emailVerified: false, // Inicialmente falso, se actualizará cuando el usuario verifique
 				};
-				await setDoc(doc(firestore, "users", newUser.user.uid), userDoc);
+
+				// Crear documento del usuario en Firestore
+				const batch = writeBatch(firestore);
+				batch.set(doc(firestore, "users", newUser.user.uid), userDoc);
+				await batch.commit();
+
 				localStorage.setItem("user-info", JSON.stringify(userDoc));
 				loginUser(userDoc);
 			}
@@ -86,7 +84,7 @@ const useSignUpWithEmailAndPassword = () => {
 			} else if (error.code === 'auth/unauthorized-domain') {
 				message = "Dominio no autorizado: Agrega este dominio a la lista de dominios autorizados en Firebase Console > Authentication > Settings > Authorized domains.";
 			} else if (error.code && error.code.includes('permission-denied') || error.message.includes('Missing or insufficient permissions')) {
-				message = "Permisos de Firestore denegados: Configura las reglas de seguridad en Firebase Console > Firestore > Rules. Usa temporalmente: allow read, write: if true;";
+				message = "Error de permisos en la base de datos. Contacta al administrador.";
 			}
 			showToast("Error de registro", message, "error");
 		}

@@ -29,15 +29,27 @@ const useEditProfile = () => {
 				URL = await getDownloadURL(ref(storage, `profilePics/${authUser.uid}`));
 			}
 
+			// Crear objeto limpio con solo datos planos para Firestore
 			const updatedUser = {
-				...authUser,
-				fullName: inputs.fullName || authUser.fullName,
-				username: inputs.username || authUser.username,
-				bio: inputs.bio || authUser.bio,
-				profilePicURL: URL || authUser.profilePicURL,
+				uid: authUser.uid,
+				email: authUser.email || "",
+				username: inputs.username || authUser.username || "",
+				fullName: inputs.fullName || authUser.fullName || "",
+				bio: inputs.bio || authUser.bio || "",
+				profilePicURL: URL || authUser.profilePicURL || "",
+				followers: authUser.followers || [],
+				following: authUser.following || [],
+				posts: authUser.posts || [],
+				createdAt: authUser.createdAt || Date.now(),
 			};
 
-			await updateDoc(userDocRef, updatedUser);
+			// Actualizar solo los campos necesarios en Firestore
+			await updateDoc(userDocRef, {
+				fullName: updatedUser.fullName,
+				username: updatedUser.username,
+				bio: updatedUser.bio,
+				profilePicURL: updatedUser.profilePicURL,
+			});
 			localStorage.setItem("user-info", JSON.stringify(updatedUser));
 			setAuthUser(updatedUser);
 			setUserProfile(updatedUser);

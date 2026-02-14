@@ -7,23 +7,25 @@ import {
   Image,
   Button,
   VStack,
+  HStack,
   useToast,
   Progress,
   IconButton,
   Tooltip,
 } from "@chakra-ui/react";
-import { ArrowBackIcon, CloseIcon, SettingsIcon } from "@chakra-ui/icons";
-import { useEffect, useState } from "react";
+import { ArrowBackIcon, CloseIcon, SettingsIcon, InfoIcon } from "@chakra-ui/icons";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useBookStore from "../../store/bookStore";
 import useAuthStore from "../../store/authStore";
 import PomodoroTimer from "../../components/PomodoroTimer/PomodoroTimer";
+import EbookReader from "../../components/EbookReader/EbookReader";
 
 const DeepReadingPage = () => {
   const { id } = useParams(); // firestoreId del libro
   const navigate = useNavigate();
   const toast = useToast();
-  const { myLibrary, selectedBook, selectBook, isLoading } = useBookStore();
+  const { myLibrary, isLoading } = useBookStore();
   const { user } = useAuthStore();
   const userId = user?.uid;
 
@@ -38,8 +40,6 @@ const DeepReadingPage = () => {
       if (foundBook) {
         setBook(foundBook);
       } else {
-        // Si no está en la biblioteca local, intentar cargar desde Firestore
-        // (por ahora, redirigir a la biblioteca)
         toast({
           title: "Libro no encontrado",
           description: "Este libro no está en tu biblioteca",
@@ -72,24 +72,32 @@ const DeepReadingPage = () => {
     }
   };
 
-  const handleUpdateProgress = (newProgress) => {
-    // Actualizar progreso del libro
+  const handleUpdateProgress = useCallback((newProgress) => {
     if (book && userId) {
-      // Implementar actualización de progreso
-      console.log("Actualizar progreso a:", newProgress);
+      const { updateReadingProgress } = useBookStore.getState();
+      updateReadingProgress(book.id, newProgress, book.currentPage, userId);
+    }
+  }, [book, userId]);
+
+  const handleLocationChange = (cfi) => {
+    // Aquí podríamos guardar el CFI en Firestore para persistencia real
+    console.log("Nueva ubicación CFI:", cfi);
+    if (book && userId) {
+      // Por ahora actualizamos el store local si tuviéramos un campo lastLocation
+      // useBookStore.getState().updateBookField(book.id, { lastLocation: cfi }, userId);
     }
   };
 
   if (isLoading || !book) {
     return (
       <Box
-        bg="santuario.paper"
+        bg="#1a1a1a"
         minH="100vh"
         display="flex"
         alignItems="center"
         justifyContent="center"
       >
-        <Text color="santuario.charcoal" fontSize="lg">
+        <Text color="whiteAlpha.800" fontSize="lg">
           Cargando santuario...
         </Text>
       </Box>
@@ -99,268 +107,177 @@ const DeepReadingPage = () => {
   const {
     title,
     authors = [],
-    thumbnail,
-    image,
-    description,
     progress = 0,
-    pageCount = 0,
-    currentPage = 0,
   } = book;
 
   return (
     <Box
-      bg="santuario.paper"
+      bg="#1a1a1a"
       minH="100vh"
-      color="santuario.charcoal"
+      color="white"
       fontFamily="body"
-      p={4}
+      position="relative"
+      overflow="hidden"
     >
-      {/* Barra superior minimalista */}
+      {/* Barra superior flotante */}
       <Flex
-        justify="space-between"
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        height="60px"
+        bg="rgba(0,0,0,0.8)"
+        backdropFilter="blur(10px)"
+        zIndex={10}
         align="center"
-        mb={8}
-        px={4}
-        py={3}
+        px={6}
+        justify="space-between"
         borderBottom="1px solid"
-        borderColor="santuario.border"
+        borderColor="whiteAlpha.200"
       >
-        <Tooltip label="Volver a la biblioteca" hasArrow>
-          <IconButton
-            aria-label="Salir del santuario"
-            icon={<ArrowBackIcon />}
-            variant="ghost"
-            color="santuario.charcoal"
-            _hover={{ bg: "santuario.border" }}
-            onClick={handleExitSantuario}
-            size="lg"
-          />
-        </Tooltip>
+        <HStack spacing={4}>
+          <Tooltip label="Volver a la biblioteca" hasArrow>
+            <IconButton
+              aria-label="Salir del santuario"
+              icon={<ArrowBackIcon />}
+              variant="ghost"
+              color="white"
+              _hover={{ bg: "whiteAlpha.200" }}
+              onClick={handleExitSantuario}
+              size="md"
+            />
+          </Tooltip>
+          <VStack align="start" spacing={0}>
+            <Heading size="xs" noOfLines={1} maxW="300px">
+              {title}
+            </Heading>
+            <Text fontSize="xs" opacity={0.7} noOfLines={1}>
+              {authors.join(', ')}
+            </Text>
+          </VStack>
+        </HStack>
 
-        <Heading
-          as="h1"
-          fontSize={{ base: "xl", md: "2xl" }}
-          fontFamily="heading"
-          fontWeight="700"
-          textAlign="center"
-          flex="1"
-          mx={4}
-          noOfLines={1}
-        >
-          Santuario de lectura
-        </Heading>
-
-        <Flex gap={2}>
-          <Tooltip label={showTimer ? "Ocultar temporizador" : "Mostrar temporizador"} hasArrow>
+        <HStack spacing={3}>
+          <Tooltip label={showTimer ? "Ocultar Temporizador" : "Ver Temporizador"} hasArrow>
             <IconButton
               aria-label="Toggle timer"
               icon={<SettingsIcon />}
-              variant="ghost"
-              color="santuario.charcoal"
-              _hover={{ bg: "santuario.border" }}
+              variant={showTimer ? "solid" : "ghost"}
+              colorScheme={showTimer ? "santuario" : "whiteAlpha"}
+              color="white"
               onClick={handleToggleTimer}
-              size="lg"
+              size="md"
             />
           </Tooltip>
+          <IconButton
+            aria-label="Toggle fullscreen"
+            icon={<CloseIcon />}
+            variant="ghost"
+            color="white"
+            onClick={handleToggleFullscreen}
+            size="md"
+          />
+        </HStack>
+      </Flex>
 
-          <Tooltip label={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} hasArrow>
+      {/* Contenido Principal */}
+      <Flex
+        pt="60px"
+        pb="80px"
+        h="100vh"
+        align="center"
+        justify="center"
+        px={4}
+        position="relative"
+      >
+        {/* Lector de eBooks Interno */}
+        <Box
+          w="100%"
+          maxW="1100px"
+          h="calc(100vh - 160px)"
+          position="relative"
+          bg="white"
+          borderRadius="lg"
+          boxShadow="2xl"
+          overflow="hidden"
+        >
+          <EbookReader
+            title={title}
+            savedLocation={book.lastLocation}
+            onLocationChange={handleLocationChange}
+          />
+        </Box>
+
+        {/* Panel lateral del Temporizador */}
+        <Box
+          position="fixed"
+          right={showTimer ? "20px" : "-400px"}
+          top="80px"
+          transition="all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+          zIndex={5}
+          maxW="350px"
+          w="100%"
+        >
+          <PomodoroTimer
+            onSessionComplete={() => {
+              const audio = new Audio("/sounds/rain.mp3");
+              audio.play().catch(console.error);
+              toast({
+                title: "¡Sesión completada!",
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+              });
+            }}
+            onProgressUpdate={handleUpdateProgress}
+          />
+        </Box>
+      </Flex>
+
+      {/* Barra inferior de controles */}
+      <Flex
+        position="fixed"
+        bottom={0}
+        left={0}
+        right={0}
+        height="70px"
+        bg="rgba(0,0,0,0.85)"
+        backdropFilter="blur(10px)"
+        zIndex={10}
+        align="center"
+        px={8}
+        justify="space-between"
+        borderTop="1px solid"
+        borderColor="whiteAlpha.200"
+      >
+        <HStack spacing={6} flex={1}>
+          <Box w="200px">
+            <Text fontSize="xs" mb={1} color="whiteAlpha.700">Progreso de lectura</Text>
+            <Progress value={progress} size="xs" colorScheme="santuario" borderRadius="full" bg="whiteAlpha.200" />
+          </Box>
+          <Text fontSize="xs" color="whiteAlpha.600">
+            {progress}% completado
+          </Text>
+        </HStack>
+
+        <HStack spacing={4} flex={1} justify="center">
+          <Text fontSize="sm" fontWeight="semibold" letterSpacing="widest" color="whiteAlpha.800">
+            SANTUARIO LITERARIO
+          </Text>
+        </HStack>
+
+        <Flex flex={1} justify="flex-end">
+          <Tooltip label="Ver detalles del libro" hasArrow>
             <IconButton
-              aria-label="Toggle fullscreen"
-              icon={<CloseIcon />}
+              icon={<InfoIcon />}
               variant="ghost"
-              color="santuario.charcoal"
-              _hover={{ bg: "santuario.border" }}
-              onClick={handleToggleFullscreen}
-              size="lg"
-              transform={isFullscreen ? "rotate(45deg)" : "none"}
-              transition="transform 0.3s ease"
+              color="white"
+              size="md"
+              _hover={{ color: "santuario.accent" }}
             />
           </Tooltip>
         </Flex>
       </Flex>
-
-      <Container maxW="container.xl">
-        <Flex
-          direction={{ base: "column", lg: "row" }}
-          gap={8}
-          align="stretch"
-          justify="center"
-        >
-          {/* Sección del libro */}
-          <Box flex={{ base: "1", lg: "2" }}>
-            <VStack spacing={8} align="center">
-              {/* Portada del libro */}
-              <Box
-                maxW="400px"
-                w="100%"
-                borderRadius="xl"
-                overflow="hidden"
-                boxShadow="xl"
-                border="1px solid"
-                borderColor="santuario.border"
-                transition="transform 0.3s ease"
-                _hover={{ transform: "scale(1.02)" }}
-              >
-                <Image
-                  src={image || thumbnail || "https://via.placeholder.com/400x600?text=Portada+no+disponible"}
-                  alt={`Portada de ${title}`}
-                  objectFit="cover"
-                  width="100%"
-                  height="auto"
-                  aspectRatio="2/3"
-                  fallbackSrc="https://via.placeholder.com/400x600?text=Portada+no+disponible"
-                />
-              </Box>
-
-              {/* Información del libro */}
-              <VStack spacing={4} maxW="600px" w="100%" textAlign="center">
-                <Heading
-                  as="h2"
-                  fontSize={{ base: "2xl", md: "3xl", lg: "4xl" }}
-                  fontFamily="heading"
-                  fontWeight="700"
-                  lineHeight="1.2"
-                  color="santuario.charcoal"
-                >
-                  {title}
-                </Heading>
-
-                <Text
-                  fontSize={{ base: "lg", md: "xl" }}
-                  color="santuario.charcoal"
-                  opacity={0.8}
-                  fontStyle="italic"
-                >
-                  {authors.join(', ')}
-                </Text>
-
-                {description && (
-                  <Text
-                    fontSize="md"
-                    color="santuario.charcoal"
-                    opacity={0.7}
-                    lineHeight="1.8"
-                    mt={4}
-                    maxH="200px"
-                    overflowY="auto"
-                    px={4}
-                    py={3}
-                    bg="white"
-                    borderRadius="lg"
-                    border="1px solid"
-                    borderColor="santuario.border"
-                  >
-                    {description}
-                  </Text>
-                )}
-
-                {/* Progreso de lectura */}
-                <Box w="100%" maxW="400px" mt={6}>
-                  <Flex justify="space-between" mb={2}>
-                    <Text fontSize="sm" fontWeight="600" color="santuario.charcoal">
-                      Tu progreso
-                    </Text>
-                    <Text fontSize="sm" fontWeight="600" color="santuario.accent">
-                      {progress}%
-                    </Text>
-                  </Flex>
-                  <Progress
-                    value={progress}
-                    size="lg"
-                    colorScheme="santuario"
-                    borderRadius="full"
-                    bg="santuario.border"
-                  />
-                  {pageCount > 0 && (
-                    <Text fontSize="xs" color="santuario.charcoal" opacity={0.6} textAlign="center" mt={2}>
-                      Página {currentPage} de {pageCount}
-                    </Text>
-                  )}
-                </Box>
-              </VStack>
-            </VStack>
-          </Box>
-
-          {/* Temporizador Pomodoro */}
-          {showTimer && (
-            <Box
-              flex={{ base: "1", lg: "1" }}
-              minW={{ base: "100%", lg: "350px" }}
-              mt={{ base: 8, lg: 0 }}
-            >
-              <PomodoroTimer
-                onSessionComplete={() => {
-                  // Reproducir sonido de lluvia/bosque
-                  const audio = new Audio("/sounds/rain.mp3");
-                  audio.play().catch(console.error);
-
-                  toast({
-                    title: "¡Sesión completada!",
-                    description: "Tómate un descanso de 5 minutos",
-                    status: "success",
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                }}
-                onProgressUpdate={handleUpdateProgress}
-              />
-            </Box>
-          )}
-        </Flex>
-
-        {/* Instrucciones minimalistas */}
-        {!showTimer && (
-          <VStack
-            spacing={3}
-            mt={12}
-            p={6}
-            bg="white"
-            borderRadius="lg"
-            border="1px solid"
-            borderColor="santuario.border"
-            maxW="400px"
-            mx="auto"
-            textAlign="center"
-          >
-            <Text fontSize="sm" color="santuario.charcoal" fontWeight="600">
-              Modo Santuario activado
-            </Text>
-            <Text fontSize="xs" color="santuario.charcoal" opacity={0.7}>
-              Enfócate en la lectura. El temporizador está oculto para minimizar distracciones.
-            </Text>
-            <Text fontSize="xs" color="santuario.accent" fontStyle="italic">
-              "La lectura es a la mente lo que el ejercicio al cuerpo"
-            </Text>
-          </VStack>
-        )}
-
-        {/* Botón de acción principal */}
-        <Flex justify="center" mt={12}>
-          <Button
-            size="lg"
-            colorScheme="santuario"
-            variant="outline"
-            leftIcon={<ArrowBackIcon />}
-            onClick={handleExitSantuario}
-            borderRadius="full"
-            px={8}
-            py={6}
-            fontSize="lg"
-            _hover={{
-              bg: "santuario.accent",
-              color: "white",
-              transform: "translateY(-2px)",
-            }}
-            transition="all 0.3s ease"
-          >
-            Volver al mundo exterior
-          </Button>
-        </Flex>
-      </Container>
-
-      {/* Efecto de sonido silencioso */}
-      <audio id="rain-sound" src="/sounds/rain.mp3" preload="auto" />
-      <audio id="forest-sound" src="/sounds/forest.mp3" preload="auto" />
     </Box>
   );
 };

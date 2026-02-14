@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Link, Tooltip, Heading } from "@chakra-ui/react";
+import { Box, Button, Flex, Link, Tooltip, Heading, Image } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 
 import { BiLogOut } from "react-icons/bi";
@@ -21,9 +21,12 @@ const Sidebar = () => {
 		>
 			<Flex direction={"column"} gap={10} w='full' height={"full"}>
 				<Link to={"/"} as={RouterLink} pl={2} display={{ base: "none", md: "block" }} cursor='pointer' textDecoration="none">
-					<Heading as="h1" fontSize="xl" fontWeight="700" fontFamily="heading" color="santuario.charcoal">
-						Santuario
-					</Heading>
+					<Flex align="center" gap={2}>
+						<Image src="/logo.png" alt="Santuario Literario Logo" boxSize="40px" borderRadius="full" />
+						<Heading as="h1" fontSize="xl" fontWeight="700" fontFamily="heading" color="santuario.charcoal">
+							Santuario
+						</Heading>
+					</Flex>
 				</Link>
 				<Link
 					to={"/"}
@@ -34,13 +37,11 @@ const Sidebar = () => {
 					_hover={{
 						bg: "whiteAlpha.200",
 					}}
-					w={10}
+					w={12}
 					cursor='pointer'
 					textDecoration="none"
 				>
-					<Heading as="h1" fontSize="lg" fontWeight="700" fontFamily="heading" color="santuario.charcoal">
-						S
-					</Heading>
+					<Image src="/logo.png" alt="Santuario Logo" boxSize="32px" borderRadius="full" />
 				</Link>
 				<Flex direction={"column"} gap={5} cursor={"pointer"}>
 					<SidebarItems />

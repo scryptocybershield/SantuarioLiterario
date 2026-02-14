@@ -1,6 +1,7 @@
 import { Box, Container, Flex, Grid, Skeleton, SkeletonCircle, Text, VStack } from "@chakra-ui/react";
 import { useEffect } from "react";
 import ReadingCard from "./ReadingCard";
+import LibraryFilters from "./LibraryFilters";
 import useBookStore from "../../store/bookStore";
 import useAuthStore from "../../store/authStore";
 
@@ -80,17 +81,10 @@ const ReadingFeed = () => {
 
   return (
     <Container maxW={"container.xl"} py={10} px={4}>
-      {filteredLibrary.length > 0 && (
-        <Box mb={8}>
-          <Text fontSize="2xl" fontWeight="700" fontFamily="heading" mb={2}>
-            Tu Biblioteca
-          </Text>
-          <Text fontSize="sm" color="santuario.charcoal" opacity={0.7}>
-            {filteredLibrary.length} libro{filteredLibrary.length !== 1 ? 's' : ''} en tu colección
-          </Text>
-        </Box>
-      )}
+      {/* Filtros y estadísticas */}
+      {myLibrary.length > 0 && <LibraryFilters />}
 
+      {/* Grid de libros */}
       <Grid
         templateColumns={{
           base: "repeat(1, 1fr)",

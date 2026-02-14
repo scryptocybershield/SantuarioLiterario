@@ -1,4 +1,4 @@
-import { Box, Flex, Text, VStack, Heading } from "@chakra-ui/react";
+import { Box, Flex, Text, VStack, Heading, Image } from "@chakra-ui/react";
 import { useState } from "react";
 import Login from "./Login";
 import Signup from "./Signup";
@@ -18,6 +18,7 @@ const AuthForm = () => {
 				boxShadow="md"
 			>
 				<VStack spacing={6}>
+					<Image src="/logo.png" alt="Santuario Literario" boxSize="60px" borderRadius="full" />
 					<Heading
 						as="h2"
 						fontSize="2xl"

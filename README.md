@@ -1,13 +1,13 @@
 # 📚 Santuario Literario
 
 **Tu espacio de introspección y lectura profunda**
-Una red social minimalista para lectores, inspirada en Instagram pero transformada en un santuario literario.
+Una red social minimalista enfocada exclusivamente en la experiencia literaria y el crecimiento personal a través de los libros.
 
 ![Santuario Literario Preview](https://via.placeholder.com/800x400/2C2C2C/FDFBF7?text=Santuario+Literario+Preview)
 
 ## 🎯 ¿Qué es Santuario Literario?
 
-Santuario Literario es una transformación radical de un clon de Instagram en una plataforma minimalista para lectores. Mantiene la esencia de una red social pero redirige toda la atención hacia la introspección literaria, eliminando el ruido visual y funcional de las redes sociales convencionales.
+Santuario Literario es una plataforma diseñada para lectores que buscan escapar del ruido de las redes sociales convencionales. Redirige toda la atención hacia la introspección literaria, eliminando distracciones visuales y funcionales para fomentar la concentración y el disfrute de la lectura.
 
 ### ✨ Características Principales
 
@@ -213,7 +213,7 @@ Distribuido bajo la licencia MIT. Ver `LICENSE` para más información.
 
 ## 🙏 Agradecimientos
 
-- **Instagram Clone Tutorial** por [Burak Orkmez](https://github.com/burakorkmez/instagram-clone) - Base del proyecto
+- **Santuario Literario Team** - Concepto y desarrollo
 - **Google Books API** - Catálogo literario mundial
 - **Firebase** - Infraestructura backend
 - **Chakra UI** - Sistema de diseño accesible
@@ -226,4 +226,4 @@ Distribuido bajo la licencia MIT. Ver `LICENSE` para más información.
 
 ---
 
-**Santuario Literario** - Transformando scroll en lectura, likes en reflexiones, followers en comunidad literaria.
+**Santuario Literario** - Tu refugio para la lectura profunda, la reflexión y la comunidad literaria.

@@ -15,7 +15,7 @@ import {
 	ModalOverlay,
 	Stack,
 } from "@chakra-ui/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import useAuthStore from "../../store/authStore";
 import usePreviewImg from "../../hooks/usePreviewImg";
 import useEditProfile from "../../hooks/useEditProfile";
@@ -32,6 +32,17 @@ const EditProfile = ({ isOpen, onClose }) => {
 	const { handleImageChange, selectedFile, setSelectedFile } = usePreviewImg();
 	const { isUpdating, editProfile } = useEditProfile();
 	const showToast = useShowToast();
+
+	// Inicializar inputs con los valores del usuario cuando el modal se abre o authUser cambia
+	useEffect(() => {
+		if (isOpen && authUser) {
+			setInputs({
+				fullName: authUser.fullName || "",
+				username: authUser.username || "",
+				bio: authUser.bio || "",
+			});
+		}
+	}, [isOpen, authUser]);
 
 	const handleEditProfile = async () => {
 		try {
@@ -81,7 +92,7 @@ const EditProfile = ({ isOpen, onClose }) => {
 										placeholder={"Full Name"}
 										size={"sm"}
 										type={"text"}
-										value={inputs.fullName || authUser.fullName}
+										value={inputs.fullName}
 										onChange={(e) => setInputs({ ...inputs, fullName: e.target.value })}
 									/>
 								</FormControl>
@@ -92,7 +103,7 @@ const EditProfile = ({ isOpen, onClose }) => {
 										placeholder={"Username"}
 										size={"sm"}
 										type={"text"}
-										value={inputs.username || authUser.username}
+										value={inputs.username}
 										onChange={(e) => setInputs({ ...inputs, username: e.target.value })}
 									/>
 								</FormControl>
@@ -103,7 +114,7 @@ const EditProfile = ({ isOpen, onClose }) => {
 										placeholder={"Bio"}
 										size={"sm"}
 										type={"text"}
-										value={inputs.bio || authUser.bio}
+										value={inputs.bio}
 										onChange={(e) => setInputs({ ...inputs, bio: e.target.value })}
 									/>
 								</FormControl>

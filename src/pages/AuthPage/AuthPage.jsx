@@ -1,4 +1,4 @@
-import { Container, Flex, VStack, Box, Text, Heading } from "@chakra-ui/react";
+import { Container, Flex, VStack, Box, Text, Heading, Image } from "@chakra-ui/react";
 import AuthForm from "../../components/AuthForm/AuthForm";
 
 const AuthPage = () => {
@@ -15,6 +15,15 @@ const AuthPage = () => {
 				<VStack spacing={8} align={"stretch"}>
 					{/* Encabezado */}
 					<Box textAlign="center" mb={4}>
+						<Image
+							src="/logo.png"
+							alt="Santuario Literario Logo"
+							boxSize="120px"
+							mx="auto"
+							mb={4}
+							borderRadius="full"
+							boxShadow="lg"
+						/>
 						<Heading
 							as="h1"
 							fontSize="4xl"

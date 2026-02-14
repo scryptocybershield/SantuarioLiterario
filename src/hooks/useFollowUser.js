@@ -5,6 +5,23 @@ import useShowToast from "./useShowToast";
 import { firestore } from "../firebase/firebase";
 import { arrayRemove, arrayUnion, doc, updateDoc } from "firebase/firestore";
 
+// Función para limpiar objeto de usuario, extrayendo solo datos planos
+const cleanUserObject = (user) => {
+	if (!user) return null;
+	return {
+		uid: user.uid || "",
+		email: user.email || "",
+		username: user.username || "",
+		fullName: user.fullName || "",
+		bio: user.bio || "",
+		profilePicURL: user.profilePicURL || "",
+		followers: Array.isArray(user.followers) ? user.followers : [],
+		following: Array.isArray(user.following) ? user.following : [],
+		posts: Array.isArray(user.posts) ? user.posts : [],
+		createdAt: user.createdAt || Date.now(),
+	};
+};
+
 const useFollowUser = (userId) => {
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(false);
@@ -28,44 +45,43 @@ const useFollowUser = (userId) => {
 
 			if (isFollowing) {
 				// unfollow
-				setAuthUser({
-					...authUser,
-					following: authUser.following?.filter((uid) => uid !== userId) || [],
-				});
-				if (userProfile)
-					setUserProfile({
-						...userProfile,
-						followers: userProfile.followers?.filter((uid) => uid !== authUser.uid) || [],
-					});
+				const cleanedAuthUser = cleanUserObject(authUser);
+				const updatedAuthUser = {
+					...cleanedAuthUser,
+					following: cleanedAuthUser.following.filter((uid) => uid !== userId),
+				};
+				setAuthUser(updatedAuthUser);
 
-				localStorage.setItem(
-					"user-info",
-					JSON.stringify({
-						...authUser,
-						following: authUser.following?.filter((uid) => uid !== userId) || [],
-					})
-				);
+				if (userProfile) {
+					const cleanedUserProfile = cleanUserObject(userProfile);
+					const updatedUserProfile = {
+						...cleanedUserProfile,
+						followers: cleanedUserProfile.followers.filter((uid) => uid !== authUser.uid),
+					};
+					setUserProfile(updatedUserProfile);
+				}
+
+				localStorage.setItem("user-info", JSON.stringify(updatedAuthUser));
 				setIsFollowing(false);
 			} else {
 				// follow
-				setAuthUser({
-					...authUser,
-					following: [...(authUser.following || []), userId],
-				});
+				const cleanedAuthUser = cleanUserObject(authUser);
+				const updatedAuthUser = {
+					...cleanedAuthUser,
+					following: [...cleanedAuthUser.following, userId],
+				};
+				setAuthUser(updatedAuthUser);
 
-				if (userProfile)
-					setUserProfile({
-						...userProfile,
-						followers: [...(userProfile.followers || []), authUser.uid],
-					});
+				if (userProfile) {
+					const cleanedUserProfile = cleanUserObject(userProfile);
+					const updatedUserProfile = {
+						...cleanedUserProfile,
+						followers: [...cleanedUserProfile.followers, authUser.uid],
+					};
+					setUserProfile(updatedUserProfile);
+				}
 
-				localStorage.setItem(
-					"user-info",
-					JSON.stringify({
-						...authUser,
-						following: [...(authUser.following || []), userId],
-					})
-				);
+				localStorage.setItem("user-info", JSON.stringify(updatedAuthUser));
 				setIsFollowing(true);
 			}
 		} catch (error) {

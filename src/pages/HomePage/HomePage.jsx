@@ -1,6 +1,7 @@
-import { Box, Container, Flex, VStack, Text, Spinner, Center } from "@chakra-ui/react";
+import { Box, Container, Flex, VStack, Text, Spinner, Center, Heading } from "@chakra-ui/react";
 import ReadingFeed from "../../components/ReadingFeed/ReadingFeed";
 import BookSearch from "../../components/BookSearch/BookSearch";
+import QuotePostsFeed from "../../components/QuoteShare/QuotePostsFeed";
 import useAuthStore from "../../store/authStore";
 
 const HomePage = () => {
@@ -34,6 +35,11 @@ const HomePage = () => {
 				{/* Biblioteca personal */}
 				<Box width="100%">
 					<ReadingFeed />
+				</Box>
+
+				{/* Feed de citas compartidas */}
+				<Box width="100%" mt={8}>
+					<QuotePostsFeed />
 				</Box>
 			</VStack>
 		</Container>

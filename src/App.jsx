@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage/HomePage";
 import AuthPage from "./pages/AuthPage/AuthPage";
 import PageLayout from "./Layouts/PageLayout/PageLayout";
@@ -12,10 +12,12 @@ import { auth } from "./firebase/firebase";
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import useAuthStore from "./store/authStore";
+import EmailVerification from "./components/Auth/EmailVerification";
 
 import { Box, Spinner, Center } from "@chakra-ui/react";
 
 function App() {
+	const location = useLocation();
 	const [authUser, loading] = useAuthState(auth);
 	const setUser = useAuthStore((state) => state.setUser);
 
@@ -39,11 +41,16 @@ function App() {
 		);
 	}
 
+	// Bloquear acceso si el usuario no ha verificado su correo electrónico (excepto página de autenticación)
+	if (authUser && !authUser.emailVerified && location.pathname !== '/auth') {
+		return <EmailVerification user={authUser} />;
+	}
+
 	return (
 		<PageLayout>
 			<Routes>
 				<Route path='/' element={authUser ? <HomePage /> : <Navigate to='/auth' />} />
-				<Route path='/auth' element={!authUser ? <AuthPage /> : <Navigate to='/' />} />
+				<Route path='/auth' element={(!authUser || !authUser.emailVerified) ? <AuthPage /> : <Navigate to='/' />} />
 				<Route path='/profile/:uid' element={<ProfilePage />} />
 				<Route path='/read/:id' element={authUser ? <DeepReadingPage /> : <Navigate to='/auth' />} />
 				<Route path='/journal' element={authUser ? <JournalPage /> : <Navigate to='/auth' />} />

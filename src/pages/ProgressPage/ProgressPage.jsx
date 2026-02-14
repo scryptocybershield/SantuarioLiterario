@@ -1,16 +1,39 @@
 import { Box, Container, VStack, Text, Heading, Divider, Grid, GridItem, Stat, StatLabel, StatNumber, StatHelpText } from "@chakra-ui/react";
-import { BsBarChart, BsBook, BsClock, BsStar } from "react-icons/bs";
+import { BsBarChart, BsBook, BsClock, BsStar, BsCheckCircle, BsBookmark, BsPauseCircle } from "react-icons/bs";
+import useBookStore from "../../store/bookStore";
+import useAuthStore from "../../store/authStore";
+import { useEffect } from "react";
 
 const ProgressPage = () => {
-	// Datos de ejemplo - luego vendrán de Firestore
-	const stats = {
-		totalBooks: 12,
-		booksReading: 3,
-		booksFinished: 9,
-		totalPages: 2850,
-		avgRating: 4.2,
-		readingStreak: 7,
+	const { myLibrary, loadLibraryFromFirestore, getReadingStats, getRatingStats } = useBookStore();
+	const authUser = useAuthStore((state) => state.user);
+
+	useEffect(() => {
+		if (authUser?.uid) {
+			loadLibraryFromFirestore(authUser.uid);
+		}
+	}, [authUser?.uid, loadLibraryFromFirestore]);
+
+	const stats = getReadingStats();
+	const ratingStats = getRatingStats();
+
+	// Calcular género favorito
+	const getFavoriteGenre = () => {
+		if (myLibrary.length === 0) return { genre: "No hay datos", count: 0 };
+
+		const genreCount = {};
+		myLibrary.forEach(book => {
+			book.categories?.forEach(category => {
+				genreCount[category] = (genreCount[category] || 0) + 1;
+			});
+		});
+
+		const favorite = Object.entries(genreCount).sort((a, b) => b[1] - a[1])[0];
+		return favorite ? { genre: favorite[0], count: favorite[1] } : { genre: "Variado", count: 0 };
 	};
+
+	const favoriteGenre = getFavoriteGenre();
+	const avgPagesPerBook = stats.totalBooks > 0 ? Math.round(stats.totalPages / stats.totalBooks) : 0;
 
 	return (
 		<Container maxW={"container.xl"}>
@@ -47,7 +70,7 @@ const ProgressPage = () => {
 							</StatLabel>
 							<StatNumber fontSize="3xl" color="santuario.charcoal">{stats.totalBooks}</StatNumber>
 							<StatHelpText color="santuario.charcoal" opacity={0.7}>
-								{stats.booksReading} en curso, {stats.booksFinished} terminados
+								{stats.currentlyReading} en curso, {stats.completed} terminados
 							</StatHelpText>
 						</Stat>
 					</GridItem>
@@ -58,9 +81,9 @@ const ProgressPage = () => {
 								<BsClock size={18} />
 								Páginas leídas
 							</StatLabel>
-							<StatNumber fontSize="3xl" color="santuario.charcoal">{stats.totalPages.toLocaleString()}</StatNumber>
+							<StatNumber fontSize="3xl" color="santuario.charcoal">{stats.pagesRead.toLocaleString()}</StatNumber>
 							<StatHelpText color="santuario.charcoal" opacity={0.7}>
-								Promedio: {Math.round(stats.totalPages / stats.totalBooks)} páginas por libro
+								Promedio: {avgPagesPerBook} páginas por libro
 							</StatHelpText>
 						</Stat>
 					</GridItem>
@@ -71,39 +94,48 @@ const ProgressPage = () => {
 								<BsStar size={18} />
 								Valoración promedio
 							</StatLabel>
-							<StatNumber fontSize="3xl" color="santuario.charcoal">{stats.avgRating}</StatNumber>
+							<StatNumber fontSize="3xl" color="santuario.charcoal">{ratingStats.averageRating || "0.0"}</StatNumber>
 							<StatHelpText color="santuario.charcoal" opacity={0.7}>
-								Basado en tus calificaciones personales
+								{ratingStats.totalRated > 0 ? `Basado en ${ratingStats.totalRated} calificaciones` : "Sin calificaciones aún"}
 							</StatHelpText>
 						</Stat>
 					</GridItem>
 
 					<GridItem>
 						<Stat p={4} bg="white" borderRadius="lg" boxShadow="sm" border="1px solid" borderColor="santuario.border">
-							<StatLabel color="santuario.charcoal">Racha de lectura</StatLabel>
-							<StatNumber fontSize="3xl" color="santuario.charcoal">{stats.readingStreak} días</StatNumber>
+							<StatLabel display="flex" alignItems="center" gap={2} color="santuario.charcoal">
+								<BsCheckCircle size={18} />
+								Tasa de completitud
+							</StatLabel>
+							<StatNumber fontSize="3xl" color="santuario.charcoal">{stats.completionRate}%</StatNumber>
 							<StatHelpText color="santuario.charcoal" opacity={0.7}>
-								¡Sigue así!
+								{stats.completed} de {stats.totalBooks} libros completados
 							</StatHelpText>
 						</Stat>
 					</GridItem>
 
 					<GridItem>
 						<Stat p={4} bg="white" borderRadius="lg" boxShadow="sm" border="1px solid" borderColor="santuario.border">
-							<StatLabel color="santuario.charcoal">Tiempo total de lectura</StatLabel>
-							<StatNumber fontSize="3xl" color="santuario.charcoal">47h</StatNumber>
+							<StatLabel display="flex" alignItems="center" gap={2} color="santuario.charcoal">
+								<BsBookmark size={18} />
+								Por leer
+							</StatLabel>
+							<StatNumber fontSize="3xl" color="santuario.charcoal">{stats.totalBooks - stats.currentlyReading - stats.completed}</StatNumber>
 							<StatHelpText color="santuario.charcoal" opacity={0.7}>
-								Estimación basada en 1h por día
+								Libros en tu lista de deseos
 							</StatHelpText>
 						</Stat>
 					</GridItem>
 
 					<GridItem>
 						<Stat p={4} bg="white" borderRadius="lg" boxShadow="sm" border="1px solid" borderColor="santuario.border">
-							<StatLabel color="santuario.charcoal">Género favorito</StatLabel>
-							<StatNumber fontSize="3xl" color="santuario.charcoal">Ficción</StatNumber>
+							<StatLabel display="flex" alignItems="center" gap={2} color="santuario.charcoal">
+								<BsPauseCircle size={18} />
+								Género favorito
+							</StatLabel>
+							<StatNumber fontSize="3xl" color="santuario.charcoal">{favoriteGenre.genre}</StatNumber>
 							<StatHelpText color="santuario.charcoal" opacity={0.7}>
-								8 de 12 libros
+								{favoriteGenre.count > 0 ? `${favoriteGenre.count} de ${stats.totalBooks} libros` : "Sin datos suficientes"}
 							</StatHelpText>
 						</Stat>
 					</GridItem>

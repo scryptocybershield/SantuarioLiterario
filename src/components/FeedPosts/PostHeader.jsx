@@ -10,7 +10,7 @@ const PostHeader = ({ post, creatorProfile }) => {
 		<Flex justifyContent={"space-between"} alignItems={"center"} w={"full"} my={2}>
 			<Flex alignItems={"center"} gap={2}>
 				{creatorProfile ? (
-					<Link to={`/${creatorProfile.username}`}>
+					<Link to={`/profile/${creatorProfile.uid}`}>
 						<Avatar src={creatorProfile.profilePicURL} alt='user profile pic' size={"sm"} />
 					</Link>
 				) : (
@@ -19,7 +19,7 @@ const PostHeader = ({ post, creatorProfile }) => {
 
 				<Flex fontSize={12} fontWeight={"bold"} gap='2'>
 					{creatorProfile ? (
-						<Link to={`/${creatorProfile.username}`}>{creatorProfile.username}</Link>
+						<Link to={`/profile/${creatorProfile.uid}`}>{creatorProfile.username}</Link>
 					) : (
 						<Skeleton w={"100px"} h={"10px"} />
 					)}

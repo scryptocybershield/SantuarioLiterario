@@ -12,6 +12,8 @@ import {
   orderBy,
   getDocs,
   serverTimestamp,
+  arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore';
 
 const useBookStore = create((set, get) => ({
@@ -21,7 +23,8 @@ const useBookStore = create((set, get) => ({
   selectedBook: null,
   isLoading: false,
   searchError: null,
-  libraryFilter: 'all', // 'all', 'reading', 'completed', 'pending', 'paused'
+  libraryFilter: 'all', // 'all', 'want-to-read', 'currently-reading', 'read', 'on-hold'
+  publicReviews: [], // Reseñas públicas de libros (para funcionalidad social)
 
   // Acciones
 
@@ -98,7 +101,7 @@ const useBookStore = create((set, get) => ({
     }
   },
 
-  addToLibrary: async (bookData, userId, status = 'pending') => {
+  addToLibrary: async (bookData, userId, status = 'want-to-read') => {
     if (!bookData || !bookData.id || !userId) {
       console.error('Datos de libro o usuario inválidos');
       return;
@@ -130,11 +133,11 @@ const useBookStore = create((set, get) => ({
 
       // Metadatos de lectura personal
       readingStatus: status,
-      progress: status === 'completed' ? 100 : 0,
+      progress: status === 'read' ? 100 : 0,
       currentPage: 0,
       addedAt: serverTimestamp(),
-      startedAt: (status === 'reading' || status === 'completed') ? serverTimestamp() : null,
-      finishedAt: status === 'completed' ? serverTimestamp() : null,
+      startedAt: (status === 'currently-reading' || status === 'read') ? serverTimestamp() : null,
+      finishedAt: status === 'read' ? serverTimestamp() : null,
       updatedAt: serverTimestamp(),
 
       // Diario privado de lectura
@@ -198,7 +201,7 @@ const useBookStore = create((set, get) => ({
     const updates = {
       progress,
       currentPage: currentPage || 0,
-      readingStatus: progress === 100 ? 'completed' : progress > 0 ? 'reading' : 'pending',
+      readingStatus: progress === 100 ? 'read' : progress > 0 ? 'currently-reading' : 'want-to-read',
       updatedAt: serverTimestamp(),
     };
 
@@ -245,11 +248,11 @@ const useBookStore = create((set, get) => ({
   /**
    * Cambia el estado de lectura de un libro en Firestore
    * @param {string} firestoreId - ID del documento en Firestore
-   * @param {string} status - Nuevo estado ('pending', 'reading', 'completed', 'paused')
+   * @param {string} status - Nuevo estado ('want-to-read', 'currently-reading', 'read', 'on-hold')
    * @param {string} userId - ID del usuario (para seguridad)
    */
   updateReadingStatus: async (firestoreId, status, userId) => {
-    if (!firestoreId || !['pending', 'reading', 'completed', 'paused'].includes(status) || !userId) {
+    if (!firestoreId || !['want-to-read', 'currently-reading', 'read', 'on-hold'].includes(status) || !userId) {
       console.error('Integrity Error: Invalid status or missing credentials.');
       return;
     }
@@ -265,13 +268,13 @@ const useBookStore = create((set, get) => ({
     };
 
     // Actualizar fechas y progreso si corresponde
-    if (status === 'reading') {
+    if (status === 'currently-reading') {
       updates.startedAt = serverTimestamp();
       updates.progress = Math.max(get().myLibrary.find(b => b.id === firestoreId)?.progress || 0, 1);
-    } else if (status === 'completed') {
+    } else if (status === 'read') {
       updates.progress = 100;
       updates.finishedAt = serverTimestamp();
-    } else if (status === 'paused') {
+    } else if (status === 'on-hold') {
       // Mantener progreso actual
     }
 
@@ -290,8 +293,8 @@ const useBookStore = create((set, get) => ({
               ...book,
               ...updates,
               updatedAt: new Date().toISOString(),
-              startedAt: status === 'reading' && !book.startedAt ? new Date().toISOString() : book.startedAt,
-              finishedAt: status === 'completed' && !book.finishedAt ? new Date().toISOString() : book.finishedAt,
+              startedAt: status === 'currently-reading' && !book.startedAt ? new Date().toISOString() : book.startedAt,
+              finishedAt: status === 'read' && !book.finishedAt ? new Date().toISOString() : book.finishedAt,
             };
           }
           return book;
@@ -410,10 +413,10 @@ const useBookStore = create((set, get) => ({
 
   /**
    * Filtra la biblioteca por estado de lectura
-   * @param {string} filter - Tipo de filtro ('all', 'reading', 'completed', 'pending', 'paused')
+   * @param {string} filter - Tipo de filtro ('all', 'want-to-read', 'currently-reading', 'read', 'on-hold')
    */
   setLibraryFilter: (filter) => {
-    if (!['all', 'reading', 'completed', 'pending', 'paused'].includes(filter)) {
+    if (!['all', 'want-to-read', 'currently-reading', 'read', 'on-hold'].includes(filter)) {
       console.error('Filtro inválido');
       return;
     }
@@ -436,8 +439,8 @@ const useBookStore = create((set, get) => ({
     const { myLibrary } = get();
 
     const totalBooks = myLibrary.length;
-    const currentlyReading = myLibrary.filter(book => book.readingStatus === 'reading').length;
-    const completed = myLibrary.filter(book => book.readingStatus === 'completed').length;
+    const currentlyReading = myLibrary.filter(book => book.readingStatus === 'currently-reading').length;
+    const completed = myLibrary.filter(book => book.readingStatus === 'read').length;
     const totalPages = myLibrary.reduce((sum, book) => sum + (book.pageCount || 0), 0);
     const pagesRead = myLibrary.reduce((sum, book) => sum + Math.floor((book.pageCount || 0) * (book.progress || 0) / 100), 0);
 
@@ -552,9 +555,164 @@ const useBookStore = create((set, get) => ({
   },
 
   /**
+   * Califica un libro (1-5 estrellas)
+   * @param {string} firestoreId - ID del documento en Firestore
+   * @param {number} rating - Calificación (1-5)
+   * @param {string} userId - ID del usuario
+   */
+  rateBook: async (firestoreId, rating, userId) => {
+    if (!firestoreId || rating < 1 || rating > 5 || !userId) {
+      console.error('Parámetros inválidos para calificación');
+      return;
+    }
+
+    set({ isLoading: true });
+
+    try {
+      // Actualizar en Firestore
+      const readingRef = doc(db, 'readings', firestoreId);
+      await updateDoc(readingRef, {
+        publicRating: rating,
+        updatedAt: serverTimestamp(),
+      });
+
+      // Actualizar estado local
+      set(state => ({
+        myLibrary: state.myLibrary.map(book => {
+          if (book.id === firestoreId) {
+            return {
+              ...book,
+              publicRating: rating,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return book;
+        }),
+        isLoading: false,
+      }));
+
+      console.log('Libro calificado:', firestoreId, 'Rating:', rating);
+    } catch (error) {
+      console.error('Error calificando libro:', error);
+      set({ isLoading: false, searchError: error.message });
+      throw error;
+    }
+  },
+
+  /**
+   * Agrega una reseña pública a un libro
+   * @param {string} firestoreId - ID del documento en Firestore
+   * @param {string} review - Contenido de la reseña
+   * @param {string} userId - ID del usuario
+   * @param {string} username - Nombre de usuario
+   * @param {string} profilePicURL - URL de la foto de perfil
+   */
+  addPublicReview: async (firestoreId, review, userId, username, profilePicURL) => {
+    if (!firestoreId || !review || !userId || !username) {
+      console.error('Parámetros inválidos para reseña');
+      return;
+    }
+
+    const reviewData = {
+      id: `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      content: review.trim(),
+      userId,
+      username,
+      profilePicURL: profilePicURL || '',
+      createdAt: new Date().toISOString(),
+      likes: [], // Array de UIDs de usuarios que dieron like a la reseña
+      isEdited: false,
+      editedAt: null,
+    };
+
+    set({ isLoading: true });
+
+    try {
+      // Actualizar en Firestore - agregar reseña al array de reseñas públicas
+      const readingRef = doc(db, 'readings', firestoreId);
+      await updateDoc(readingRef, {
+        publicReview: review,
+        updatedAt: serverTimestamp(),
+        // También podríamos tener un array de reseñas si queremos múltiples reseñas por libro
+      });
+
+      // Actualizar estado local
+      set(state => ({
+        myLibrary: state.myLibrary.map(book => {
+          if (book.id === firestoreId) {
+            return {
+              ...book,
+              publicReview: review,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return book;
+        }),
+        isLoading: false,
+      }));
+
+      console.log('Reseña pública agregada:', firestoreId);
+    } catch (error) {
+      console.error('Error agregando reseña pública:', error);
+      set({ isLoading: false, searchError: error.message });
+      throw error;
+    }
+  },
+
+  /**
+   * Da like a una reseña (para funcionalidad social futura)
+   * @param {string} bookId - ID del libro
+   * @param {string} reviewId - ID de la reseña
+   * @param {string} userId - ID del usuario que da like
+   */
+  likeReview: async (bookId, reviewId, userId) => {
+    if (!bookId || !reviewId || !userId) {
+      console.error('Parámetros inválidos para like de reseña');
+      return;
+    }
+
+    // Esta función sería para un sistema de reseñas más complejo
+    // Por ahora es un placeholder para funcionalidad futura
+    console.log('Like a reseña:', { bookId, reviewId, userId });
+  },
+
+  /**
+   * Obtiene estadísticas de calificaciones
+   */
+  getRatingStats: () => {
+    const { myLibrary } = get();
+
+    const ratedBooks = myLibrary.filter(book => book.publicRating > 0);
+    const totalRated = ratedBooks.length;
+
+    if (totalRated === 0) {
+      return {
+        averageRating: 0,
+        totalRated: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      };
+    }
+
+    const sumRatings = ratedBooks.reduce((sum, book) => sum + book.publicRating, 0);
+    const averageRating = sumRatings / totalRated;
+
+    // Distribución de calificaciones
+    const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    ratedBooks.forEach(book => {
+      ratingDistribution[book.publicRating]++;
+    });
+
+    return {
+      averageRating: parseFloat(averageRating.toFixed(1)),
+      totalRated,
+      ratingDistribution
+    };
+  },
+
+  /**
    * Limpia la biblioteca local (útil para logout)
    */
-  clearLibrary: () => set({ myLibrary: [], selectedBook: null, searchResults: [], libraryFilter: 'all' }),
+  clearLibrary: () => set({ myLibrary: [], selectedBook: null, searchResults: [], libraryFilter: 'all', publicReviews: [] }),
 }));
 
 export default useBookStore;

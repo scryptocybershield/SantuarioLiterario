@@ -120,7 +120,7 @@ const BookSearch = () => {
     }
 
     try {
-      await addToLibrary(book, userId, 'pending');
+      await addToLibrary(book, userId, 'want-to-read');
       toast({
         title: "Libro añadido",
         description: `"${book.title}" ha sido añadido a tu biblioteca`,
