@@ -2,6 +2,7 @@ import { Box, Container, Flex, Grid, Skeleton, SkeletonCircle, Text, VStack } fr
 import { useEffect } from "react";
 import ReadingCard from "./ReadingCard";
 import LibraryFilters from "./LibraryFilters";
+import EmptyState from "./EmptyState";
 import useBookStore from "../../store/bookStore";
 import useAuthStore from "../../store/authStore";
 
@@ -16,10 +17,15 @@ const ReadingFeed = () => {
   }, [authUser?.uid, loadLibraryFromFirestore]);
 
   const filteredLibrary = getFilteredLibrary();
+  const hasBooks = filteredLibrary.length > 0;
 
-  if (isLoading && myLibrary.length === 0) {
-    return (
-      <Container maxW={"container.xl"} py={10} px={4}>
+  return (
+    <Container maxW={"container.xl"} py={6} px={4}>
+      {/* Filtros y estadísticas - SIEMPRE VISIBLES */}
+      <LibraryFilters />
+
+      {/* Estado de carga */}
+      {isLoading && myLibrary.length === 0 && (
         <Grid
           templateColumns={{
             base: "repeat(1, 1fr)",
@@ -28,6 +34,7 @@ const ReadingFeed = () => {
             xl: "repeat(4, 1fr)",
           }}
           gap={6}
+          mt={8}
         >
           {[0, 1, 2, 3, 4, 5].map((idx) => (
             <Box
@@ -53,51 +60,31 @@ const ReadingFeed = () => {
             </Box>
           ))}
         </Grid>
-      </Container>
-    );
-  }
+      )}
 
-  if (!isLoading && filteredLibrary.length === 0) {
-    return (
-      <Container maxW={"container.md"} py={20} px={4}>
-        <VStack spacing={6} textAlign="center">
-          <Box fontSize="6xl" color="santuario.accent" opacity={0.3}>
-            📚
-          </Box>
-          <Text fontSize="2xl" fontWeight="700" fontFamily="heading" color="santuario.charcoal">
-            Tu santuario literario está esperando
-          </Text>
-          <Text fontSize="md" color="santuario.charcoal" opacity={0.7} maxW="400px">
-            Añade tu primer libro para comenzar tu viaje de lectura.
-            Busca títulos, autores o géneros que te inspiren.
-          </Text>
-          <Text fontSize="sm" color="santuario.accent" fontStyle="italic">
-            "Un libro abierto es un cerebro que habla; cerrado, un amigo que espera"
-          </Text>
-        </VStack>
-      </Container>
-    );
-  }
-
-  return (
-    <Container maxW={"container.xl"} py={10} px={4}>
-      {/* Filtros y estadísticas */}
-      {myLibrary.length > 0 && <LibraryFilters />}
-
-      {/* Grid de libros */}
-      <Grid
-        templateColumns={{
-          base: "repeat(1, 1fr)",
-          md: "repeat(2, 1fr)",
-          lg: "repeat(3, 1fr)",
-          xl: "repeat(4, 1fr)",
-        }}
-        gap={6}
-      >
-        {filteredLibrary.map((book) => (
-          <ReadingCard key={book.id} book={book} />
-        ))}
-      </Grid>
+      {/* Grid de libros o estado vacío */}
+      {!isLoading && (
+        <>
+          {hasBooks ? (
+            <Grid
+              templateColumns={{
+                base: "repeat(1, 1fr)",
+                md: "repeat(2, 1fr)",
+                lg: "repeat(3, 1fr)",
+                xl: "repeat(4, 1fr)",
+              }}
+              gap={6}
+              mt={8}
+            >
+              {filteredLibrary.map((book) => (
+                <ReadingCard key={book.id} book={book} />
+              ))}
+            </Grid>
+          ) : (
+            <EmptyState />
+          )}
+        </>
+      )}
     </Container>
   );
 };

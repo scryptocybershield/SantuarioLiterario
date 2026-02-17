@@ -100,42 +100,52 @@ const LibraryFilters = () => {
         ))}
       </Flex>
 
-      {/* Progreso general */}
-      {stats.totalBooks > 0 && (
-        <Box mt={4} p={3} bg="santuario.paper" borderRadius="lg" border="1px solid" borderColor="santuario.border">
-          <Flex justify="space-between" align="center" mb={1}>
-            <Text fontSize="sm" fontWeight="500" color="santuario.charcoal">
-              Progreso general de lectura
-            </Text>
-            <Text fontSize="sm" fontWeight="600" color="santuario.accent">
-              {stats.completionRate}% completado
-            </Text>
-          </Flex>
+      {/* Progreso general - SIEMPRE VISIBLE */}
+      <Box
+        mt={4}
+        p={4}
+        bg="santuario.paper"
+        borderRadius="lg"
+        border="1px solid"
+        borderColor="santuario.border"
+        width="100%"
+        maxW={{ base: "100%", md: "400px", lg: "500px" }}
+      >
+        <Flex justify="space-between" align="center" mb={2}>
+          <Text fontSize="sm" fontWeight="500" color="santuario.charcoal">
+            Progreso general de lectura
+          </Text>
+          <Text fontSize="sm" fontWeight="600" color="santuario.accent">
+            {stats.totalBooks > 0 ? `${stats.completionRate}% completado` : '0% completado'}
+          </Text>
+        </Flex>
+        <Box
+          h={3}
+          bg="gray.100"
+          borderRadius="full"
+          overflow="hidden"
+          position="relative"
+        >
           <Box
-            h={2}
-            bg="gray.100"
+            h="100%"
+            bg="santuario.accent"
             borderRadius="full"
-            overflow="hidden"
-            position="relative"
-          >
-            <Box
-              h="100%"
-              bg="santuario.accent"
-              borderRadius="full"
-              width={`${stats.completionRate}%`}
-              transition="width 0.3s ease"
-            />
-          </Box>
-          <Flex justify="space-between" mt={2}>
-            <Text fontSize="xs" color="gray.500">
-              {stats.pagesRead.toLocaleString()} de {stats.totalPages.toLocaleString()} páginas
-            </Text>
-            <Text fontSize="xs" color="gray.500">
-              {stats.readingProgress}% del total
-            </Text>
-          </Flex>
+            width={stats.totalBooks > 0 ? `${stats.completionRate}%` : '0%'}
+            transition="width 0.3s ease"
+          />
         </Box>
-      )}
+        <Flex justify="space-between" mt={2}>
+          <Text fontSize="xs" color="gray.500">
+            {stats.totalBooks > 0
+              ? `${stats.pagesRead.toLocaleString()} de ${stats.totalPages.toLocaleString()} páginas`
+              : '0 páginas leídas'
+            }
+          </Text>
+          <Text fontSize="xs" color="gray.500">
+            {stats.totalBooks > 0 ? `${stats.readingProgress}% del total` : '0% del total'}
+          </Text>
+        </Flex>
+      </Box>
     </Box>
   );
 };
