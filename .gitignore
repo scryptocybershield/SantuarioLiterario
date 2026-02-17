@@ -130,3 +130,6 @@ temp/
 # Application specific (añadir según necesidades)
 # /public/logo.png  # Mantener en git si es parte del diseño
 # /src/firebase/firebase.js  # Mantener pero sin credenciales hardcodeadas
+# Claude
+.claude/
+settings.local.json
